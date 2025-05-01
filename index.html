@@ -20,8 +20,11 @@
   <body></body>
   <script>
 
-    /* Experiment ID for DataPipe data writing to osf*/
+    /* Experiment ID for DataPipe data writing to osf */
     const expID = "vrdQSquktlSi";
+    
+    /* Set-up trial counter */
+    var trial_count = -1; // minus one because I want warmup to be trial_count = 0
 
     /* Initialize jsPsych */
     var jsPsych = initJsPsych({
@@ -32,7 +35,8 @@
       on_trial_finish: function(data) {
         // Handle audio data specially.
         if (data.trial_type === "html-audio-response") {
-          const filename = `${participant_id}_${jsPsych.getProgress().current_trial_global}_audio.webm`;
+          trial_count++;
+          const filename = `recording_${participant_id}_${trial_count}.webm`;
           jsPsychPipe.saveBase64Data(expID,  filename, data.response);
           // Delete the base64 data to save space. store the filename instead.
           data.response = filename;
@@ -51,10 +55,10 @@
     var browser_check = {
       type: jsPsychBrowserCheck,
       inclusion_function: (data) => {
-        return data.mobile === false
+        return (data.mobile === false && data.browser !== "safari")
       },
       exclusion_message: (data) => {
-        if(data.mobile){
+        if(data.mobile || data.browser === "safari") {
         return excl_txt;
         }
       }
@@ -86,6 +90,16 @@
       html: `${demo_img}${sex_img}${age_img}`
     };
     timeline.push(demography);
+    
+    /* Save metadata via DataPipe before recording starts */
+    var save_metadata = {
+      type: jsPsychPipe,
+      action: "save",
+      experiment_id: expID,
+      filename: `metadata_${participant_id}.json`,
+      data_string: () => jsPsych.data.get().json()
+    };
+    timeline.push(save_metadata);
 
     /* Inform the participant about the warm-up trial */
     var preinit = {
@@ -171,16 +185,6 @@
       repetitions: 1
     };
     timeline.push(procedure);
-
-    /* Save the data via DataPipe */
-    var save_data = {
-      type: jsPsychPipe,
-      action: "save",
-      experiment_id: expID,
-      filename: `${participant_id}_metadata.json`,
-      data_string: () => jsPsych.data.get().json()
-    };
-    timeline.push(save_data)
 
     /* Finish the experiment */
     var farewell = {
