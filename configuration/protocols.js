@@ -1,0 +1,10 @@
+const protocols = [
+{"stimulus": "img/1c1f0ae9-8127-405b-954e-86761e2acac0_2.png"},
+{"stimulus": "img/67ed0eed-0b59-43cd-b564-71ac5e5bd177_0.png"},
+{"stimulus": "img/30c56c5c-6a4b-4439-b63a-f50421598fa8_1.png"},
+{"stimulus": "img/8fd93fdb-8894-4862-930a-a7a2bac7bbf5_1.png"},
+{"stimulus": "img/43819fcc-9af6-47d1-adfa-990b74d47824_0.png"},
+{"stimulus": "img/5cec6273-1c52-401c-9b61-c30703974181_1.png"},
+{"stimulus": "img/2b6d34da-4e2c-4b5a-8fe9-99644a1b92bb_2.png"},
+{"stimulus": "img/8bae0ee7-46b9-4f6e-a949-23df714e7c77_0.png"}
+]

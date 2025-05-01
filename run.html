@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Scene Descriptions</title>
+    <script src="jspsych/jspsych.js"></script>
+    <script src="../dist/index.browser.js"></script>
+    <script src="jspsych/plugin-browser-check.js"> </script>
+    <script src="jspsych/plugin-preload.js"></script>
+    <script src="jspsych/plugin-instructions.js"></script>
+    <script src="jspsych/plugin-survey-html-form.js"></script>
+    <script src="jspsych/plugin-html-button-response.js"></script>
+    <script src="jspsych/plugin-initialize-microphone.js"></script>
+    <script src="jspsych/plugin-fullscreen.js"></script>
+    <script src="jspsych/plugin-html-audio-response.js"></script>
+    <script src="configuration/protocols.js"></script>
+    <script src="configuration/images.js"></script>
+    <script src="configuration/texts.js"></script>
+    <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body></body>
+  <script>
+
+    /* Experiment ID for DataPipe data writing to osf*/
+    const expID = "vrdQSquktlSi";
+
+    /* Initialize jsPsych */
+    var jsPsych = initJsPsych({
+      show_progress_bar: true,
+      message_progress_bar: cbar_txt,
+      auto_update_progress_bar: false,
+      override_safe_mode: true,
+      on_trial_finish: function(data) {
+        // Handle audio data specially.
+        if (data.trial_type === "html-audio-response") {
+          const filename = `${participant_id}_${jsPsych.getProgress().current_trial_global}_audio.webm`;
+          jsPsychPipe.saveBase64Data(expID,  filename, data.response);
+          // Delete the base64 data to save space. store the filename instead.
+          data.response = filename;
+        }
+      }
+    });
+
+    /* Generate a unique ID */
+    const participant_id = jsPsych.randomization.randomID(10);
+    jsPsych.data.addProperties({participant_id: participant_id});
+
+    /* Create timeline */
+    var timeline = [];
+
+    /* Check browser & disallow mobile phone */
+    var browser_check = {
+      type: jsPsychBrowserCheck,
+      inclusion_function: (data) => {
+        return data.mobile === false
+      },
+      exclusion_message: (data) => {
+        if(data.mobile){
+        return excl_txt;
+        }
+      }
+    };
+    timeline.push(browser_check);
+
+    /* Preload images */
+    var preload = {
+      type: jsPsychPreload,
+      auto_preload: false,
+      images: images.concat(instruct)
+    };
+    timeline.push(preload);
+
+    /* Show instruction to the participants */
+    var instructions = {
+      type: jsPsychInstructions,
+      pages: [welc_img, cons_img],
+      show_clickable_nav: true,
+      button_label_previous: prev_txt,
+      button_label_next: next_txt
+    };
+    timeline.push(instructions);
+
+    /* Demography variables */
+    var demography = {
+      type: jsPsychSurveyHtmlForm,
+      button_label: cont_txt,
+      html: `${demo_img}${sex_img}${age_img}`
+    };
+    timeline.push(demography);
+
+    /* Inform the participant about the warm-up trial */
+    var preinit = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: info_img,
+      choices: [next_txt]
+    };
+    timeline.push(preinit);
+
+    /* Set-up the microphone */
+    var setup = {
+      type: jsPsychInitializeMicrophone,
+      device_select_message: micr_img,
+      button_label: choose_txt
+    };
+    timeline.push(setup);
+
+    /* Record the warm-up data */
+    var warmup = {
+      type: jsPsychHtmlAudioResponse,
+      stimulus: `${tria_img}<img src="${images[0]}" style="height: 512px; width: 512px;">`,
+      recording_duration: rec_dur,
+      done_button_label: rec_txt,
+      allow_playback: true,
+      record_again_button_label: repeat_txt,
+      accept_button_label: accept_txt
+    };
+    timeline.push(warmup);
+
+    /* Let the participant begin the experiment */
+    var init = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: chec_img,
+      choices: check_txt,
+      on_finish: function(data) {
+        if (data.response === 0) {
+          jsPsych.endExperiment(term_img)
+        };
+      }
+    };
+    timeline.push(init);
+
+    /* Start fullscreen mode */
+    var enter_fullscreen = {
+      type: jsPsychFullscreen,
+      message: star_img,
+      fullscreen_mode: true,
+      button_label: start_txt,
+      on_finish: function() {
+        // Set progress bar to 0 at the start of experiment.
+        jsPsych.progressBar.progress = 0;
+      }
+    };
+    timeline.push(enter_fullscreen);
+
+    /* Set-up all test stimuli */
+    var stimuli = protocols;
+
+    /* Find number of trials */
+    var ntrials = images.length - 1
+
+    /* Record the data */
+    var record = {
+      type: jsPsychHtmlAudioResponse,
+      recording_duration: rec_dur,
+      done_button_label: rec_txt,
+      stimulus: () => {
+        var stim = jsPsych.evaluateTimelineVariable("stimulus");
+        return `${tria_img}<img src="${stim}" style="height: 512px; width: 512px;">`;
+      },
+      on_finish: function(data) {
+        // At the end of each trial, update the progress bar:
+        var curr_progress_bar_value = jsPsych.progressBar.progress;
+        jsPsych.progressBar.progress = curr_progress_bar_value + (1/ntrials);
+      }
+    };
+
+    /* Define test procedure */
+    var procedure = {
+      timeline: [record],
+      timeline_variables: stimuli,
+      randomize_order: true,
+      repetitions: 1
+    };
+    timeline.push(procedure);
+
+    /* Save the data via DataPipe */
+    var save_data = {
+      type: jsPsychPipe,
+      action: "save",
+      experiment_id: expID,
+      filename: `${participant_id}_metadata.json`,
+      data_string: () => jsPsych.data.get().json()
+    };
+    timeline.push(save_data)
+
+    /* Finish the experiment */
+    var farewell = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: fini_img,
+      choices: [finish_txt],
+      trial_duration: 10000
+    };
+    timeline.push(farewell);
+
+    /* Start the experiment */
+    jsPsych.run(timeline);
+
+  </script>
+</html>
