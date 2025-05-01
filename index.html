@@ -96,6 +96,7 @@
       type: jsPsychPipe,
       action: "save",
       experiment_id: expID,
+      wait_message: `<p>Ukládám data. Nezavírejte prosím tuto stránku.</p>`,
       filename: `metadata_${participant_id}.json`,
       data_string: () => jsPsych.data.get().json()
     };
