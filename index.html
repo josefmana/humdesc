@@ -19,6 +19,19 @@
   </head>
   <body></body>
   <script>
+  
+    /* Shuffling function for randomisation */
+    // taken from: https://stackoverflow.com/a/6274381
+    function shuffle(a) {
+      var j, x, i;
+      for (i = a.length - 1; i > 0; i--) {
+          j = Math.floor(Math.random() * (i + 1));
+          x = a[i];
+          a[i] = a[j];
+          a[j] = x;
+      }
+      return a;
+    };
 
     /* Experiment ID for DataPipe data writing to osf */
     const expID = "vrdQSquktlSi";
@@ -91,6 +104,15 @@
     };
     timeline.push(demography);
     
+    /* Set-up all test stimuli */
+    var stimuli = shuffle(protocols);
+    
+    /* Record the stimuli order in the jsPsych data */
+    jsPsych.data.addProperties({
+      participant_id: expID,
+      stimuli: stimuli
+    });
+    
     /* Save metadata via DataPipe before recording starts */
     var save_metadata = {
       type: jsPsychPipe,
@@ -155,9 +177,6 @@
       }
     };
     timeline.push(enter_fullscreen);
-
-    /* Set-up all test stimuli */
-    var stimuli = protocols;
 
     /* Find number of trials */
     var ntrials = images.length - 1
