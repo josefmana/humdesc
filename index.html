@@ -9,6 +9,7 @@
     <script src="jspsych/plugin-instructions.js"></script>
     <script src="jspsych/plugin-survey-html-form.js"></script>
     <script src="jspsych/plugin-html-button-response.js"></script>
+    <script src="jspsych/plugin-html-keyboard-response.js"></script>
     <script src="jspsych/plugin-initialize-microphone.js"></script>
     <script src="jspsych/plugin-fullscreen.js"></script>
     <script src="jspsych/plugin-html-audio-response.js"></script>
@@ -71,8 +72,10 @@
         return (data.mobile === false && data.browser !== "safari")
       },
       exclusion_message: (data) => {
-        if(data.mobile || data.browser === "safari") {
+        if(data.mobile) {
         return excl_txt;
+        } else if(data.browser === "safari") {
+          return safari_txt;
         }
       }
     };
@@ -110,7 +113,7 @@
     /* Record the stimuli order in the jsPsych data */
     jsPsych.data.addProperties({
       participant_id: expID,
-      stimuli: stimuli
+      protocol: stimuli
     });
     
     /* Save metadata via DataPipe before recording starts */
@@ -139,6 +142,15 @@
       button_label: choose_txt
     };
     timeline.push(setup);
+    
+    /* Set-up manual beginning of recording */
+    var begin = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: begi_img,
+      choices: [begin_txt],
+      trial_duration: 60000
+    };
+    timeline.push(begin);
 
     /* Record the warm-up data */
     var warmup = {
@@ -180,6 +192,8 @@
 
     /* Find number of trials */
     var ntrials = images.length - 1
+    
+    /* Manually */
 
     /* Record the data */
     var record = {
@@ -199,19 +213,27 @@
 
     /* Define test procedure */
     var procedure = {
-      timeline: [record],
+      timeline: [begin, record],
       timeline_variables: stimuli,
-      randomize_order: true,
+      randomize_order: false,
       repetitions: 1
     };
     timeline.push(procedure);
+    
+    /* Exit fullscreen mode */
+    var exit_fullscreen = {
+      type: jsPsychFullscreen,
+      message: star_img,
+      fullscreen_mode: false
+    };
+    timeline.push(exit_fullscreen);
 
     /* Finish the experiment */
     var farewell = {
-      type: jsPsychHtmlButtonResponse,
+      type: jsPsychHtmlKeyboardResponse,
       stimulus: fini_img,
-      choices: [finish_txt],
-      trial_duration: 10000
+      choices: 'NO_KEYS',
+      trial_duration: 180000
     };
     timeline.push(farewell);
 
