@@ -3,13 +3,17 @@ var tongue = 'CZE';
 
 // Prepare language-specific variables:
 var cbar_txt, prev_txt, next_txt, excl_txt, cont_txt, micro_txt, choose_txt, rec_txt,
-repeat_txt, accept_txt, check_txt, start_txt, finish_txt, sex_drop, instruct, rec_dur;
+repeat_txt, accept_txt, check_txt, start_txt, finish_txt, sex_drop, instruct, rec_secs,
+max_dur, countdown_secs
 
-// Maximal duration of answer recording:
-rec_dur = 120000;
+// Maximal duration of answer recording in seconds:
+rec_secs = 120;
 
 // Maximal duration of the experiment:
-max_dur = 1 // in minutes
+max_dur = 30; // in minutes
+
+// Time in seconds that will show countdown:
+countdown_secs = 15;
 
 // Depending on the language, assign values:
 if (tongue === 'CZE') {

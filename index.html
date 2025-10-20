@@ -43,7 +43,9 @@
     /* Timer variables */
     var experiment_start_time = null;
     const max_experiment_duration = max_dur * 60 * 1000; // recalculate to milliseconds
-
+    const rec_dur = rec_secs * 1000;
+    const count_dur = countdown_secs * 1000;
+    
     /* Initialize jsPsych */
     var jsPsych = initJsPsych({
       show_progress_bar: true,
@@ -206,7 +208,38 @@
       done_button_label: rec_txt,
       stimulus: () => {
         var stim = jsPsych.evaluateTimelineVariable("stimulus");
-        return `${tria_img}<img src="${stim}" style="height: 512px; width: 512px;">`;
+        return `
+          ${tria_img}
+          <img src="${stim}" style="height: 512px; width: 512px;">
+          <div id="countdown" style="position: fixed; top: 20px; right: 20px; font-size: 48px; font-weight: bold; color: #ff4444; display: none; background: rgba(255,255,255,0.9); padding: 15px 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 9999;"></div>
+        `;
+      },
+      on_start: function() {
+        // Wait for the trial to fully render, then start countdown logic:
+        setTimeout(function() {
+          var countdownTime = countdown_secs;
+          var countdownElement = document.getElementById('countdown');
+          // For debugging:
+          //if (!countdownElement) {
+          //  console.error('Countdown element not found');
+          //  return;
+          //}
+          var startDelay = Math.max(0, rec_dur - count_dur); // Show countdown C seconds before end
+          // Repeat each second to show countdown if neccessary:
+          setTimeout(function() {
+            countdownElement.style.display = 'block';
+            countdownElement.textContent = countdownTime;
+            // Make sure the countdown works properly:
+            var countdownInterval = setInterval(function() {
+              countdownTime--;
+              if (countdownTime >= 0) {
+                countdownElement.textContent = countdownTime; // show countdown value
+              } else {
+                clearInterval(countdownInterval); // ensure no negative values
+              }
+            }, 1000);
+          }, startDelay);
+        }, 100); // Small delay to ensure DOM is ready
       },
       on_finish: function(data) {
         // At the end of each trial, update the progress bar:
@@ -214,13 +247,11 @@
         jsPsych.progressBar.progress = curr_progress_bar_value + (1/ntrials);
       }
     };
-
-    /* Define test procedure */
-    var procedure = {
+    
+    /* Define inner procedure for single trial */
+    var single_trial = {
       timeline: [begin, record],
-      timeline_variables: stimuli,
-      randomize_order: false,
-      repetitions: 1,
+      timeline_variables: [{}], // Single iteration per loop
       conditional_function: function() {
         // Check if 30 minutes have passed
         if (experiment_start_time === null) {
@@ -229,6 +260,14 @@
         var elapsed_time = Date.now() - experiment_start_time;
         return elapsed_time < max_experiment_duration;
       }
+    };
+    
+    /* Define outer procedure that loops through all stimuli */
+    var procedure = {
+      timeline: [single_trial],
+      timeline_variables: stimuli,
+      randomize_order: false,
+      repetitions: 1
     };
     timeline.push(procedure);
     
