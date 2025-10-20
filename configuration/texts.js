@@ -8,6 +8,9 @@ repeat_txt, accept_txt, check_txt, start_txt, finish_txt, sex_drop, instruct, re
 // Maximal duration of answer recording:
 rec_dur = 120000;
 
+// Maximal duration of the experiment:
+max_dur = 1 // in minutes
+
 // Depending on the language, assign values:
 if (tongue === 'CZE') {
   // Czech language settings:

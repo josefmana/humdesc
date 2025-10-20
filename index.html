@@ -39,6 +39,10 @@
     
     /* Set-up trial counter */
     var trial_count = -1; // minus one because I want warmup to be trial_count = 0
+    
+    /* Timer variables */
+    var experiment_start_time = null;
+    const max_experiment_duration = max_dur * 60 * 1000; // recalculate to milliseconds
 
     /* Initialize jsPsych */
     var jsPsych = initJsPsych({
@@ -186,6 +190,8 @@
       on_finish: function() {
         // Set progress bar to 0 at the start of experiment.
         jsPsych.progressBar.progress = 0;
+        // Start the experiment timer
+        experiment_start_time = Date.now();
       }
     };
     timeline.push(enter_fullscreen);
@@ -193,8 +199,6 @@
     /* Find number of trials */
     var ntrials = images.length - 1;
     
-    /* Manually */
-
     /* Record the data */
     var record = {
       type: jsPsychHtmlAudioResponse,
@@ -216,7 +220,15 @@
       timeline: [begin, record],
       timeline_variables: stimuli,
       randomize_order: false,
-      repetitions: 1
+      repetitions: 1,
+      conditional_function: function() {
+        // Check if 30 minutes have passed
+        if (experiment_start_time === null) {
+          return true; // Continue if timer hasn't started yet
+        }
+        var elapsed_time = Date.now() - experiment_start_time;
+        return elapsed_time < max_experiment_duration;
+      }
     };
     timeline.push(procedure);
     
